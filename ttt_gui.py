@@ -1,77 +1,162 @@
 from tkinter import *
-from main import play_player, play_ai
+from tkinter import messagebox
+from main import play_ai
 import random
+import os
+import sqlite3
 
 root  = Tk()
 root.title("Tic Tac Toe with AVA")
 root.resizable(width=False, height=False)
-tit1 = Label(root, text='Please Choose')
-tit1.grid(row=0, column=0)
+root.iconbitmap('sampleico1.ico')
+tit1 = Label(root, text='Tic Tac Toe with AVA\nPlease choose your symbol:')
+tit1.grid(row=0, column=0, columnspan=3)
+tit3 = Label(root, text='By: Lloyd Acha')
+tit3.grid(row=3, column=0)
+
+
+def game_record(pWin, aWin):
+	conn =sqlite3.connect('game_records.db')
+	c = conn.cursor()
+	c.execute("SELECT *, oid FROM game_records")
+	recs = c.fetchall()
+	recsl = list(recs[0])
+	cur_pwins = recsl[0]
+	cur_awins = recsl[1]
+	if pWin:
+		cur_pwins +=1
+	if aWin:
+		cur_awins +=1
+	print(cur_pwins, cur_awins)
+	c.execute("UPDATE game_records SET player_wins = :cur_pwins, ava_wins = :cur_awins WHERE oid = 1",
+		{
+		'cur_pwins': cur_pwins,
+		'cur_awins': cur_awins
+		})
+	conn.commit()
+	conn.close()
+	return cur_pwins, cur_awins
 
 def ply_chc(p_sym):
-	root.destroy()
+	root.withdraw()
 	def btn_clk(val,sym):
 		a_sym = 'X' if sym == 'O' else 'O'
+		isDraw = False
 		board = [
 				[b1.get(),b2.get(),b3.get()],
 				[b4.get(),b5.get(),b6.get()],
 				[b7.get(),b8.get(),b9.get()]
 			]
+		paths = [
+				[[0,0],[1,1],[2,2]],
+				[[0,2],[1,1],[2,0]],
+				[[0,0],[0,1],[0,2]], 
+				[[1,0],[1,1],[1,2]],
+				[[2,0],[2,1],[2,2]],
+				[[0,0],[1,0],[2,0]],
+				[[0,1],[1,1],[2,1]],
+				[[0,2],[1,2],[2,2]]
+			]
 
 		if val == 1:
 			py,px = 0,0
-			play_player(px, py, board, sym)
 			btn1.config(text=sym, state=DISABLED)
 			b1.insert(0, sym)
 		elif val == 4:
 			py,px = 1,0
-			play_player(px, py, board, sym)
 			btn4.config(text=sym, state=DISABLED)
 			b4.insert(0, sym)
 			board = play_ai(board, p_sym)
 		elif val == 7:
 			py,px = 2,0
-			play_player(px, py, board, sym)
 			btn7.config(text=sym, state=DISABLED)
 			b7.insert(0, sym)
 		elif val == 2:
 			py,px = 0,1
-			play_player(px, py, board, sym)
 			btn2.config(text=sym, state=DISABLED)
 			b2.insert(0, sym)
 		elif val == 5:
 			py,px = 1,1
-			play_player(px, py, board, sym)
 			btn5.config(text=sym, state=DISABLED)
 			b5.insert(0, sym)
 		elif val == 8:
 			py,px = 2,1
-			play_player(px, py, board, sym)
 			btn8.config(text=sym, state=DISABLED)
 			b8.insert(0, sym)
 		elif val == 3:
 			py,px = 0,2
-			play_player(px, py, board, sym)
 			btn3.config(text=sym, state=DISABLED)
 			b3.insert(0, sym)
 		elif val == 6:
 			py,px = 1,2
-			play_player(px, py, board, sym)
 			btn6.config(text=sym, state=DISABLED)
 			b6.insert(0, sym)
 		elif val == 9:
 			py,px = 2,2
-			play_player(px, py, board, sym)
 			btn9.config(text=sym, state=DISABLED)
 			b9.insert(0, sym)
+		pl_lb.config(text="AVA has moved, It's you're turn, you are " + p_sym +".")
 		board = [
 				[b1.get(),b2.get(),b3.get()],
 				[b4.get(),b5.get(),b6.get()],
 				[b7.get(),b8.get(),b9.get()]
 			]
-
+		#draw check
+		#win check
+		pWin = False
+		aWin = False
+		#for player
+		for a in range(8):
+			w_count = 0
+			if not pWin:
+				for b in range(3):
+					cx = paths[a][b][1]
+					cy = paths[a][b][0]
+					if board[cy][cx] == sym:
+						w_count += 1
+					if w_count == 3:
+						pWin = True
+		if pWin:
+			pl_lb.config(text="Player has won. Nice!")
+			cur_pwins, cur_awins, = game_record(pWin, aWin)
+			s_lb.config(text="Record:\nPlayer - " + str(cur_pwins) +"\nAVA - " + str(cur_awins))
+			play_again = messagebox.askyesno('GAME DONE', 'Player Won!\nPlay Again?')
+			btn1.config(state=DISABLED)
+			btn2.config(state=DISABLED)
+			btn3.config(state=DISABLED)
+			btn4.config(state=DISABLED)
+			btn5.config(state=DISABLED)
+			btn6.config(state=DISABLED)
+			btn7.config(state=DISABLED)
+			btn8.config(state=DISABLED)
+			btn9.config(state=DISABLED)
+			if play_again:
+				root.deiconify()
+				top.destroy()
+				return
+			else:
+				print('nah')
+				return		
+		turns = 0
+		for a in range(3):
+			for b in range(3):
+				if board[a][b] != '':
+					turns +=1
+		#board analysis
+		
+		
 		#AI move
-		ai_coord = play_ai(board, p_sym)
+		ai_coord, isDraw = play_ai(board, p_sym)
+		if isDraw:
+			pl_lb.config(text="It's a DRAWWW!!!!!")
+			play_again = messagebox.askyesno("GAME DONE", "It's a Draw!\nPlay Again?")
+			if play_again:
+				root.deiconify()
+				top.destroy()
+				return
+			else:
+				print('nah')
+				return
 		if ai_coord == [0,0]:
 			b1.insert(0, a_sym)
 			btn1.config(text=a_sym, state=DISABLED)
@@ -99,12 +184,52 @@ def ply_chc(p_sym):
 		elif ai_coord == [2,2]:
 			b9.insert(0, a_sym)
 			btn9.config(text=a_sym, state=DISABLED)
+
+		for a in range(8):
+			w_count = 0
+			if not aWin:
+				for b in range(3):
+					cx = paths[a][b][1]
+					cy = paths[a][b][0]
+					if board[cy][cx] == a_sym:
+						w_count += 1
+					if w_count == 3:
+						aWin = True
+		if aWin:
+			pl_lb.config(text="AVA won. by... ay nko")
+			cur_pwins, cur_awins, = game_record(pWin, aWin)
+			s_lb.config(text="Record:\nPlayer - " + str(cur_pwins) +"\nAVA - " + str(cur_awins))
+			play_again = messagebox.askyesno('GAME DONE', 'AVA Wins!\nPlay Again?')
 			
+			btn1.config(state=DISABLED)
+			btn2.config(state=DISABLED)
+			btn3.config(state=DISABLED)
+			btn4.config(state=DISABLED)
+			btn5.config(state=DISABLED)
+			btn6.config(state=DISABLED)
+			btn7.config(state=DISABLED)
+			btn8.config(state=DISABLED)
+			btn9.config(state=DISABLED)
+			if play_again:
+				root.deiconify()
+				top.destroy()
+				return
+			else:
+				print('nah')
+				return
+			
+
 	top = Tk()
 	top.title('Tic Tac Toe with AVA')
 	top.resizable(width=False, height=False)
-	pl_lb = Label(top, text='You are ' + p_sym)
-	pl_lb.grid(row=0, column=0)
+	top.iconbitmap('sampleico1.ico')
+	pl_lb = Label(top, text="It's you're turn, you are " + p_sym +".")
+	pl_lb.grid(row=0, column=0, columnspan=3, sticky=W)
+	pWin = False
+	aWin = False
+	cur_pwins, cur_awins, = game_record(pWin, aWin)
+	s_lb = Label(top, text="Record:\nPlayer - " + str(cur_pwins) +"\nAVA - " + str(cur_awins))
+	s_lb.grid(row=1, column=0, columnspan=3, sticky=W)
 	btn1 = Button(top, text=' ', command=lambda: btn_clk(1,p_sym), width=12,height=3)
 	btn2 = Button(top, text=' ', command=lambda: btn_clk(2,p_sym), width=12,height=3)
 	btn3 = Button(top, text=' ', command=lambda: btn_clk(3,p_sym), width=12,height=3)
@@ -152,6 +277,7 @@ def ply_chc(p_sym):
 		elif ai_fm == 5:
 			btn5.config(text='O', state=DISABLED)
 			b5.insert(0, 'O')
+		pl_lb.config(text="AVA has moved, It's you're turn, you are " + p_sym +".")
 
 	board = [
 				[b1.get(),b2.get(),b3.get()],
@@ -159,7 +285,7 @@ def ply_chc(p_sym):
 				[b7.get(),b8.get(),b9.get()]
 			]
 
-	top.mainloop
+	top.mainloop()
 
 
 btn_O = Button(root, text='O', command=lambda: ply_chc('O'), width=12,height=3)

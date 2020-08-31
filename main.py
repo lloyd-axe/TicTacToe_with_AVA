@@ -1,42 +1,14 @@
 import random
-
-board = [
-			[' ', ' ', ' '],
-			[' ', ' ', ' '],
-			[' ', ' ', ' ']
-		]
 paths = [
-			[[0,0],[1,1],[2,2]],
-			[[0,2],[1,1],[2,0]],
-			[[0,0],[0,1],[0,2]], 
-			[[1,0],[1,1],[1,2]],
-			[[2,0],[2,1],[2,2]],
-			[[0,0],[1,0],[2,0]],
-			[[0,1],[1,1],[2,1]],
-			[[0,2],[1,2],[2,2]]
-		]
-
-def play_player(px, py, board, p_sym):
-	board[py][px] = p_sym
-	paths = [
-			[[0,0],[1,1],[2,2]],
-			[[0,2],[1,1],[2,0]],
-			[[0,0],[0,1],[0,2]], 
-			[[1,0],[1,1],[1,2]],
-			[[2,0],[2,1],[2,2]],
-			[[0,0],[1,0],[2,0]],
-			[[0,1],[1,1],[2,1]],
-			[[0,2],[1,2],[2,2]]
-		]
-	p_path = []
-	for a in range(8):
-		for b in range(3):
-			ppx = paths[a][b][1]
-			ppy = paths[a][b][0]
-			if board[ppy][ppx] == p_sym:
-				p_path.append(a)
-				break
-
+				[[0,0],[1,1],[2,2]],
+				[[0,2],[1,1],[2,0]],
+				[[0,0],[0,1],[0,2]], 
+				[[1,0],[1,1],[1,2]],
+				[[2,0],[2,1],[2,2]],
+				[[0,0],[1,0],[2,0]],
+				[[0,1],[1,1],[2,1]],
+				[[0,2],[1,2],[2,2]]
+			]
 def win_checker(p_sym, a_sym, p_path, a_path, board):
     set_a = set(a_path)
     set_p = set(p_path)
@@ -132,7 +104,7 @@ def play_ai(board, p_sym):
 				print(board[y1][x1])
 				board[y1][x1] = a_sym
 				ai_coord = [y1, x1]
-				return ai_coord
+				return ai_coord, False
 	else:
 		set_p = set(p_path)
 		set_a = set(a_path)
@@ -145,13 +117,13 @@ def play_ai(board, p_sym):
 			ay = blnk_a[0]
 			ai_coord = [ay, ax]
 			board[ay][ax] = a_sym
-			return ai_coord
+			return ai_coord, False
 		if ptoWin:
 			ax = blnk_p[1]
 			ay = blnk_p[0]
 			ai_coord = [ay, ax]
 			board[ay][ax] = a_sym
-			return ai_coord
+			return ai_coord, False
 
 		if avl_a != []:
 			ai_path = random.choice(avl_a)
@@ -164,7 +136,7 @@ def play_ai(board, p_sym):
 				if board[cy][cx] == '':
 					ai_coord = [cy,cx]
 					board[cy][cx] = a_sym
-					return ai_coord
+					return ai_coord, False
 		else:
 			print('empty')
 			while True:
@@ -175,10 +147,14 @@ def play_ai(board, p_sym):
 				print(y1,x1)
 				print(board)
 				print('aaaaaa')
-				if board[y1][x1] == '':
-					print(board[y1][x1])
-					board[y1][x1] = a_sym
-					ai_coord = [y1, x1]
-					return ai_coord
+				if turns >= 9:
+					ai_coord = [0,0]
+					return ai_coord, True
+				else:
+					if board[y1][x1] == '':
+						print(board[y1][x1])
+						board[y1][x1] = a_sym
+						ai_coord = [y1, x1]
+						return ai_coord, False
 	print(board)
-	return ai_coord
+	return ai_coord, False
